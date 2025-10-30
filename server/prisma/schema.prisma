@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Comes from your .env file
+}
+
+// Enum for friend request status
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model User {
+  id           String  @id @default(cuid())
+  username     String  @unique // For finding friends
+  email        String  @unique
+  passwordHash String // Stores the hashed password
+  avatarUrl    String? // Optional avatar URL
+
+  createdAt DateTime @default(now())
+
+  // --- Friend Relationships ---
+  // Requests this user has sent
+  sentRequests     Friendship[] @relation("sentRequests")
+  // Requests this user has received
+  receivedRequests Friendship[] @relation("receivedRequests")
+
+  // --- Chat Relationships ---
+  // Chats this user is a part of
+  chats    Chat[]
+  // Messages this user has sent
+  messages Message[]
+
+  @@map("users") // Maps to a table named "users"
+}
+
+model Friendship {
+  id String @id @default(cuid())
+
+  requesterId String
+  receiverId  String
+  status      FriendStatus @default(PENDING) // Default to PENDING on creation
+
+  createdAt DateTime @default(now())
+
+  // --- Relations ---
+  requester User @relation("sentRequests", fields: [requesterId], references: [id])
+  receiver  User @relation("receivedRequests", fields: [receiverId], references: [id])
+
+  // A user can only send one request to another user
+  @@unique([requesterId, receiverId])
+  @@map("friendships")
+}
+
+model Chat {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+
+  // --- Relations ---
+  // A chat has many participants (many-to-many with User)
+  participants User[]
+  // A chat has many messages
+  messages     Message[]
+
+  @@map("chats")
+}
+
+model Message {
+  id      String @id @default(cuid())
+  content String // The actual text content of the message
+
+  createdAt DateTime @default(now())
+
+  // --- Relations ---
+  chat   Chat   @relation(fields: [chatId], references: [id])
+  chatId String
+
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+
+  @@map("messages")
+}
