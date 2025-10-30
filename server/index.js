@@ -17,12 +17,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "https://c.growwpaisa.com/",
     methods: ["GET", "POST", "PUT"],
   },
 });
 
-const port = 5001;
+const port = 8008;
 
 // --- Middleware ---
 app.use(cors());
@@ -59,7 +59,7 @@ app.post("/signup", upload.single("avatar"), async (req, res) => {
   let avatarUrl = null;
   if (req.file) {
     // Construct the full URL for the frontend
-    avatarUrl = `http://localhost:${port}/uploads/${req.file.filename}`;
+    avatarUrl = `https://c.growwpaisa.com/uploads/${req.file.filename}`;
   }
 
   if (!username || !email || !password) {
@@ -318,7 +318,7 @@ io.on("connection", (socket) => {
 });
 
 // --- Start Server ---
-server.listen(port, () => {
+server.listen(port, "0.0.0.0", () => {
   console.log(
     `🚀 Server (with WebSockets) running at http://localhost:${port}`
   );
